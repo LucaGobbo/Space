@@ -12,13 +12,11 @@ struct LaunchesList: View {
 
     // MARK: - Properties
     private static let placeholderCount = 3
+    private var placeholderCount: Int { min(totalCount - offset, Self.placeholderCount) }
     var launches: SectionedLaunches
     var isPaging: Bool = false
     var offset: Int = 0
     var totalCount: Int = 0
-    var placeholderCount: Int {
-        min(totalCount - offset, Self.placeholderCount)
-    }
     var nextPage: () -> Void = {}
     var presentRocket: (Rocket.ID) -> Void = { _ in }
 
