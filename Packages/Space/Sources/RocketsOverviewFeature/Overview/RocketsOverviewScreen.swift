@@ -22,6 +22,7 @@ public struct RocketsOverviewScreen: View {
     public var body: some View {
         RocketsList(
             rockets: viewModel.paginator.items,
+            totalCount: viewModel.paginator.totalCount,
             isPaging: viewModel.paginator.isPaging,
             nextPage: viewModel.requestNextPage
         )

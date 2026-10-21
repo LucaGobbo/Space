@@ -12,7 +12,10 @@ struct RocketsList: View {
 
     // MARK: - Properties
     private static let placeholderCount = 10
+    private var placeholderCount: Int { min(totalCount - rockets.count, Self.placeholderCount) }
+
     var rockets: [Rocket]
+    var totalCount: Int = 0
     var isPaging: Bool = false
     var nextPage: () -> Void = {}
 
@@ -24,23 +27,29 @@ struct RocketsList: View {
                     RocketCell(rocket: rocket)
                 }
             }
-            if isPaging {
-                // One placeholder per row of the next page; only the first requests it.
-                ForEach(0..<Self.placeholderCount, id: \.self) { index in
+            if isPaging, placeholderCount > 0 {
+                ForEach(rockets.count..<rockets.count + placeholderCount, id: \.self) { index in
                     RocketCell(rocket: Rocket.samples.first!)
-                        .onAppear { if index == 0 { nextPage() } }
+                        .onAppear { if index == rockets.count { nextPage() } }
                         .redacted(reason: .placeholder)
                         .allowsHitTesting(false)
                 }
             }
         }
-        .animation(.default, value: AnimationHash(rockets: rockets, isPaging: isPaging))
-
+        .animation(
+            .default,
+            value: AnimationHash(
+                rockets: rockets,
+                isPaging: isPaging,
+                placeholderCount: placeholderCount
+            )
+        )
     }
 
     struct AnimationHash: Equatable {
         var rockets: [Rocket]
         var isPaging: Bool
+        var placeholderCount: Int
     }
 }
 
@@ -48,11 +57,16 @@ struct RocketsList: View {
 
 private func previewList(rockets: [Rocket], isPaging: Bool) -> some View {
     NavigationStack {
-        RocketsList(rockets: rockets, isPaging: isPaging, nextPage: {})
-            .navigationTitle(LocalizedStringResource("Rockets", bundle: #bundle))
-            .navigationDestination(for: RocketsRoute.self) { _ in
-                Text("Detail", bundle: #bundle)
-            }
+        RocketsList(
+            rockets: rockets,
+            totalCount: rockets.count + (isPaging ? 10 : 0),
+            isPaging: isPaging,
+            nextPage: {}
+        )
+        .navigationTitle(LocalizedStringResource("Rockets", bundle: #bundle))
+        .navigationDestination(for: RocketsRoute.self) { _ in
+            Text("Detail", bundle: #bundle)
+        }
     }
 }
 

@@ -37,6 +37,7 @@ public struct LaunchesOverviewScreen: View {
             launches: viewModel.launches,
             isPaging: viewModel.paginator.isPaging,
             offset: viewModel.paginator.offset,
+            totalCount: viewModel.paginator.totalCount,
             nextPage: viewModel.requestNextPage,
             presentRocket: presentRocket
         )

@@ -11,9 +11,14 @@ import SwiftUI
 struct LaunchesList: View {
 
     // MARK: - Properties
+    private static let placeholderCount = 3
     var launches: SectionedLaunches
     var isPaging: Bool = false
     var offset: Int = 0
+    var totalCount: Int = 0
+    var placeholderCount: Int {
+        min(totalCount - offset, Self.placeholderCount)
+    }
     var nextPage: () -> Void = {}
     var presentRocket: (Rocket.ID) -> Void = { _ in }
 
@@ -34,8 +39,8 @@ struct LaunchesList: View {
                     presentRocket: presentRocket
                 )
             }
-            if isPaging {
-                ForEach(Self.placeholders(offset: offset)) { launch in
+            if isPaging, placeholderCount > 0 {
+                ForEach(Self.placeholders(offset: offset, count: placeholderCount)) { launch in
                     LaunchCell(launch: launch).onAppear {
                         guard launch.id == Self.placeholderID(offset: offset, index: 0) else { return }
                         nextPage()
@@ -81,8 +86,8 @@ struct LaunchesList: View {
         "placeholder-\(offset)-\(index)"
     }
 
-    private static func placeholders(offset: Int) -> [Launch] {
-        (0..<10).map { index in
+    private static func placeholders(offset: Int, count: Int) -> [Launch] {
+        (0..<count).map { index in
             Launch(
                 id: placeholderID(offset: offset, index: index),
                 name: "Placeholder launch name",
@@ -115,7 +120,9 @@ struct LaunchesList: View {
     NavigationStack {
         LaunchesList(
             launches: .init(launches: Launch.samples, now: now),
-            isPaging: true
+            isPaging: true,
+            offset: Launch.samples.count,
+            totalCount: Launch.samples.count + 3
         )
         .navigationTitle(LocalizedStringResource("Launches", bundle: #bundle))
     }
