@@ -50,7 +50,20 @@ struct LaunchesList: View {
                 .allowsHitTesting(false)
             }
         }
-        .animation(.smooth, value: launches)
+        .animation(
+            .smooth,
+            value: AnimationHash(
+                launches: launches,
+                isPaging: isPaging,
+                placeholderCount: placeholderCount
+            )
+        )
+    }
+
+    private struct AnimationHash: Equatable {
+        var launches: SectionedLaunches
+        var isPaging: Bool
+        var placeholderCount: Int
     }
 
     struct LaunchSection: View {
