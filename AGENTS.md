@@ -1,0 +1,1 @@
+- only  use XcodeMCP for buidling and running tests, do not use XCODEBUILD commandline

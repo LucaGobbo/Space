@@ -1,0 +1,17 @@
+{
+  "fileScopedDeclarationPrivacy" : {
+    "accessLevel" : "private"
+  },
+  "indentation" : {
+    "spaces" : 4
+  },
+  "indentConditionalCompilationBlocks" : true,
+  "multiElementCollectionTrailingCommas" : false,
+  "lineLength" : 120,
+  "maximumBlankLines" : 1,
+  "tabWidth" : 4,
+  "version" : 1,
+  "rules": {
+    "AvoidRetroactiveConformances": false
+  }
+}

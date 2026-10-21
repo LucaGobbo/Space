@@ -1,0 +1,21 @@
+disabled_rules:
+  - inclusive_language
+  - nesting
+  - multiple_closures_with_trailing_closure
+  - opening_brace
+  - trailing_comma
+
+identifier_name:
+  excluded:
+    - x
+    - y
+    - id
+
+excluded:
+  - Packages/Space/.build
+  - Packages/Space/Package.swift
+  - DerivedData
+  - build
+  - SpaceX Info.xcodeproj
+
+reporter: "xcode"
