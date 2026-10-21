@@ -33,6 +33,7 @@ public final class Paginator<Item: Sendable> {
     public var isInitial: Bool { state.isInitial }
     public var isPaging: Bool { state.isPaging }
     public var error: String? { state.error }
+    public var totalCount: Int = 0
 
     // MARK: - init
     public init(
@@ -45,11 +46,11 @@ public final class Paginator<Item: Sendable> {
 
     // MARK: - API
 
-    @concurrent private func fetchPage(offset: Int, state: State) async throws -> State {
+    @concurrent private func fetchPage(offset: Int, state: State) async throws -> (State, Int) {
         let data = try await load(offset)
         var state = state
         state.received(data, replacing: offset == 0)
-        return state
+        return (state, data.totalCount)
     }
 
     public func fetch(refresh: Bool = false) async {
@@ -58,9 +59,14 @@ public final class Paginator<Item: Sendable> {
         }
         state.dismissFailure()
         let offset = refresh ? 0 : state.offset
+        if offset == 0 {
+            totalCount = 0
+        }
         state.startLoading()
         do {
-            state = try await fetchPage(offset: offset, state: state)
+            let (state, totalCount) = try await fetchPage(offset: offset, state: state)
+            self.state = state
+            self.totalCount = totalCount
         } catch  where error.isCancellation {
             state.cancelLoading()
         } catch {

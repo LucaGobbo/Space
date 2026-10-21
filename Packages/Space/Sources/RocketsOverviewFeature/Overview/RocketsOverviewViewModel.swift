@@ -24,7 +24,11 @@ final class RocketsOverviewViewModel {
     ) {
         self.paginator = Paginator(initialState: initialState) { offset in
             let response = try await rocketRepository.rockets(limit: Self.pageSize, offset: offset)
-            return Page(items: response.rockets, isLastPage: response.isLastPage)
+            return Page(
+                items: response.rockets,
+                isLastPage: response.isLastPage,
+                totalCount: response.totalCount
+            )
         }
     }
 

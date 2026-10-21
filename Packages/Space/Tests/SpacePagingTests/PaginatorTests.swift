@@ -203,6 +203,58 @@ struct PaginatorTests {
         #expect(state == initial)
     }
 
+    // MARK: - totalCount
+
+    @MainActor
+    struct TotalCount {
+        @Test func `WHEN the first page loads, THEN it takes the page's total count`() async {
+            let paginator = await makePaginator(
+                .fetch, from: .initial, totalCount: 0, loadsAt: 0, returning: .success(morePages))
+            #expect(paginator.totalCount == 10)
+        }
+
+        @Test func `WHEN a next page loads, THEN it takes the page's total count`() async {
+            let paginator = await makePaginator(
+                .fetch, from: .paging([0, 1]), totalCount: 5, loadsAt: 2, returning: .success(morePages))
+            #expect(paginator.totalCount == 10)
+        }
+
+        @Test func `WHEN the last page loads, THEN it takes the page's total count`() async {
+            let paginator = await makePaginator(
+                .fetch, from: .paging([0, 1]), totalCount: 10, loadsAt: 2, returning: .success(lastPage))
+            #expect(paginator.totalCount == 4)
+        }
+
+        @Test func `WHEN refreshing, THEN it replaces the previous total count`() async {
+            let paginator = await makePaginator(
+                .refresh, from: .complete([0, 1]), totalCount: 99, loadsAt: 0, returning: .success(morePages))
+            #expect(paginator.totalCount == 10)
+        }
+
+        @Test func `WHEN fetching a next page fails, THEN the total count is kept`() async {
+            let paginator = await makePaginator(
+                .fetch, from: .paging([0, 1]), totalCount: 10, loadsAt: 2, returning: .failure(Boom()))
+            #expect(paginator.totalCount == 10)
+        }
+
+        @Test func `WHEN fetching a next page is cancelled, THEN the total count is kept`() async {
+            let paginator = await makePaginator(
+                .fetch, from: .paging([0, 1]), totalCount: 10, loadsAt: 2, returning: .failure(CancellationError()))
+            #expect(paginator.totalCount == 10)
+        }
+
+        @Test func `WHEN refreshing fails, THEN the total count is reset`() async {
+            let paginator = await makePaginator(
+                .refresh, from: .paging([0, 1]), totalCount: 10, loadsAt: 0, returning: .failure(Boom()))
+            #expect(paginator.totalCount == 0)
+        }
+
+        @Test func `WHEN it does not load, THEN the total count is kept`() async {
+            let paginator = await makePaginator(.fetch, from: .complete([0, 1]), totalCount: 10, loadsAt: nil)
+            #expect(paginator.totalCount == 10)
+        }
+    }
+
     // MARK: - Helpers
 
     enum Action { case fetch, refresh, dismissFailure }
@@ -213,8 +265,8 @@ struct PaginatorTests {
 
     struct UnexpectedLoad: Error {}
 
-    static let morePages = Page(items: [7, 8], isLastPage: false)
-    static let lastPage = Page(items: [7, 8], isLastPage: true)
+    static let morePages = Page(items: [7, 8], isLastPage: false, totalCount: 10)
+    static let lastPage = Page(items: [7, 8], isLastPage: true, totalCount: 4)
     nonisolated static let cancellations: [any Error] = [CancellationError(), URLError(.cancelled)]
 
     /// `load` answers with `result` for `expectedOffset` and fails for any other offset (or when `nil`), so a
@@ -225,15 +277,27 @@ struct PaginatorTests {
         loadsAt expectedOffset: Int?,
         returning result: Result<Page<Int>, any Error> = .failure(UnexpectedLoad())
     ) async -> Paginator<Int>.State {
+        await makePaginator(action, from: initial, totalCount: 0, loadsAt: expectedOffset, returning: result).state
+    }
+
+    /// Same as `run`, but starts with `totalCount` and returns the paginator so it can be inspected.
+    static func makePaginator(
+        _ action: Action,
+        from initial: Paginator<Int>.State,
+        totalCount: Int,
+        loadsAt expectedOffset: Int?,
+        returning result: Result<Page<Int>, any Error> = .failure(UnexpectedLoad())
+    ) async -> Paginator<Int> {
         let paginator = Paginator<Int>(initialState: initial) { offset in
             guard offset == expectedOffset else { throw UnexpectedLoad() }
             return try result.get()
         }
+        paginator.totalCount = totalCount
         switch action {
         case .fetch: await paginator.fetch()
         case .refresh: await paginator.fetch(refresh: true)
         case .dismissFailure: paginator.dismissFailure()
         }
-        return paginator.state
+        return paginator
     }
 }

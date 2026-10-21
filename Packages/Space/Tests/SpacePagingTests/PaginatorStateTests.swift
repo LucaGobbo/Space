@@ -16,7 +16,7 @@ struct PaginatorStateTests {
     private typealias State = Paginator<Int>.State
 
     private func page(_ range: Range<Int>, isLastPage: Bool) -> Page<Int> {
-        Page(items: Array(range), isLastPage: isLastPage)
+        Page(items: Array(range), isLastPage: isLastPage, totalCount: 10)
     }
 
     @Test func `WHEN initial, THEN there are no items and fetching is allowed`() {

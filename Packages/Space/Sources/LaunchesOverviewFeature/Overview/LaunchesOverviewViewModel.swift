@@ -56,7 +56,11 @@ final class LaunchesOverviewViewModel {
     ) -> Paginator<Launch> {
         Paginator(initialState: initialState) { offset in
             let response = try await repository.launches(in: range, limit: pageSize, offset: offset)
-            return Page(items: response.launches, isLastPage: response.isLastPage)
+            return Page(
+                items: response.launches,
+                isLastPage: response.isLastPage,
+                totalCount: response.totalCount
+            )
         }
     }
 
